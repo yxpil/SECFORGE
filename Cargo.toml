@@ -1,0 +1,28 @@
+[package]
+name = "secforge"
+version = "0.1.0"
+edition = "2021"
+description = "Security MCP server for AI agents — aggregates the BITECO satellites (neton / firelin / adonword / howcueme / memorypool) as MCP tools"
+license = "Apache-2.0"
+repository = "https://github.com/yxpil/SECFORGE"
+readme = "README.md"
+keywords = ["mcp", "security", "agent", "cli", "json"]
+categories = ["command-line-utilities", "network-programming"]
+
+[[bin]]
+name = "secforge"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+axum = "0.8"
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "process", "time", "io-util"] }
+
+[dev-dependencies]
+ureq = { version = "2", features = ["json"] }
+
+[profile.release]
+strip = true
