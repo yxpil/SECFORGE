@@ -1,3 +1,12 @@
+# SECFORGE 测试说明
+
+- 测试完成：是（2026-10-04）
+- 测试日期：2026-10-04
+- 测试内容：单元测试 2（工具注册表/权限环境）+ CLI tests/cli.rs(6) + MCP tests/mcp.rs(6)；注入：shell 元字符参数走 stdin JSON 不被执行（无文件副作用）、非对象/垃圾参数被干净处理不 panic；本仓库无插件/钩子机制。
+- 运行命令：`cargo test`（mcp 用例需 rustc 在 PATH 现场编译假卫星）
+- 测试框架：Rust `#[cfg(test)]` + 进程内 axum 路由端到端
+- 模型：豆包（Doubao）生成
+
 # 测试说明（SECFORGE）
 
 SECFORGE 是一个 MCP 聚合网关：把多个安全工具卫星二进制（neton/firelin/...）聚合为
