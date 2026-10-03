@@ -328,3 +328,65 @@ fn protocol_errors_ping_and_notifications() {
     );
     assert_eq!(body["result"]["protocolVersion"], "2025-06-18");
 }
+
+#[test]
+fn hostile_argument_values_are_passed_as_literal_stdin_data_not_shelled() {
+    // Command-injection attempt in an argument *value*: secforge pipes the whole
+    // arguments object to the child's stdin as JSON (never via a shell), so shell
+    // metacharacters must ride along as an opaque string and never execute.
+    let addr = spawn_server(false);
+    let base = format!("http://{addr}");
+    let sid = initialize(&base, "/mcp");
+
+    let sentinel = "pwned_secforge_marker.txt";
+    let _ = std::fs::remove_file(sentinel);
+    let payload = format!("\"; touch {sentinel}; $(whoami) #");
+    let (status, _, body) = rpc(
+        &base,
+        "/mcp",
+        json!({"jsonrpc": "2.0", "id": 20, "method": "tools/call",
+               "params": {"name": "neton_info", "arguments": {"hello-marker": 1, "host": payload}}}),
+        Some(&sid),
+    );
+    assert_eq!(status, 200);
+    assert_eq!(body["result"]["isError"], false, "hostile args must still be a normal call: {body}");
+    let text = body["result"]["content"][0]["text"].as_str().expect("text");
+    let out: Value = serde_json::from_str(text).expect("satellite JSON");
+    assert_eq!(out["fake"], true);
+    assert_eq!(out["got_marker"], true, "arguments reached the child on stdin as data");
+    // The shell command in the payload must NOT have been executed.
+    assert!(
+        !std::path::Path::new(sentinel).exists(),
+        "injection payload executed a shell command!"
+    );
+    let _ = std::fs::remove_file(sentinel);
+}
+
+#[test]
+fn non_object_and_garbage_arguments_are_handled_without_panic() {
+    let addr = spawn_server(false);
+    let base = format!("http://{addr}");
+    let sid = initialize(&base, "/mcp");
+
+    // arguments as a bare string (not an object): call_satellite must coerce it
+    // to an empty object and run the child cleanly, never panic.
+    let (status, _, body) = rpc(
+        &base,
+        "/mcp",
+        json!({"jsonrpc": "2.0", "id": 21, "method": "tools/call",
+               "params": {"name": "neton_info", "arguments": "totally-not-an-object"}}),
+        Some(&sid),
+    );
+    assert_eq!(status, 200);
+    assert_eq!(body["result"]["isError"], false, "garbage args must not crash the router: {body}");
+
+    // Unknown tool with a wildly wrong argument type → clean -32602, no panic.
+    let (_, _, body) = rpc(
+        &base,
+        "/mcp",
+        json!({"jsonrpc": "2.0", "id": 22, "method": "tools/call",
+               "params": {"name": "definitely_not_a_tool", "arguments": [[[[[1]]]]]}}),
+        Some(&sid),
+    );
+    assert_eq!(body["error"]["code"], -32602, "unknown tool must be a clean protocol error: {body}");
+}
