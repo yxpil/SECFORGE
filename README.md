@@ -284,3 +284,15 @@ Streamable HTTP 的 MCP 客户端接入方式相同。
 - 扫描工具在**服务器层**（不列出 + 不可调用）和**卫星层**（转发其自身授权环境变量）
   双重锁定，两道门独立生效。
 - 仅对你拥有或获得书面授权的网络执行扫描。
+
+---
+
+<div align="center">
+
+<a href="https://github.com/yxpil/SECFORGE">
+  <img width="100%" src="https://alittlecatgirlpanel.yxp.hk/card?repo=yxpil/SECFORGE" alt="gh-card · yxpil/SECFORGE" />
+</a>
+
+<sub>Powered by <a href="https://alittlecatgirlpanel.yxp.hk"><b>gh-card</b></a> · 粉色手写体 README 仓库名片</sub>
+
+</div>
